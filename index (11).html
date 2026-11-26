@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keane's Arithmetic Game</title>
+<style>
+/* VOICE: plain, utilitarian drill tool — a faithful Zetamac look.
+   IDEA: the Zetamac setup card and problem band, unchanged in spirit.
+   PICTURE: the problem itself, large, in a full-width gray band.
+   COLOUR and TYPE: white page, #ddd panels, black Helvetica/Arial.
+   LAYOUT: centered gray card on home; top bar + band in game. */
+:root{color-scheme:light}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:#fff;color:#000;font:15px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif}
+.view{display:none}.view.on{display:block}
+button{font:inherit;font-size:15px;padding:4px 12px;background:#f4f4f4;border:1px solid #888;border-radius:3px;color:#000;cursor:pointer}
+button:hover{background:#e8e8e8}button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #1a5fd0;outline-offset:1px}
+.card{width:min(500px,100%);margin:0 auto;background:#ddd;padding:28px 24px 24px}
+h1{font-size:30px;line-height:1.1;margin:10px 0 22px}
+.opt{margin:0 0 12px}
+.opt>label{display:flex;align-items:center;gap:8px;font-size:15px}
+.opt input[type=checkbox]{width:16px;height:16px;margin:0}
+.sub{margin:2px 0 0 26px}
+.rng{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.rng input{width:3.6em;font:inherit;text-align:right;padding:2px 4px;border:1px solid #999;border-radius:2px;background:#fff;color:#000}
+select{font:inherit;padding:2px 4px;background:#fff;color:#000;border:1px solid #999;border-radius:3px}
+.row-end{display:flex;justify-content:flex-end;margin-top:14px}
+.topright{display:flex;justify-content:flex-end;padding:12px 16px 0}
+.bar{display:flex;justify-content:space-between;padding:14px 16px;font-size:16px}
+.band{background:#ddd;margin-top:clamp(80px,22vh,190px);padding:14px 16px;display:flex;justify-content:center;align-items:center;gap:12px;font-size:clamp(26px,5vw,38px)}
+.band input{width:5.2em;font:inherit;padding:2px 6px;border:2px solid #1a5fd0;border-radius:3px;background:#fff;color:#000}
+.wrap{width:min(640px,100%);margin:0 auto;padding:16px}
+h2{font-size:26px;margin:16px 0 10px}
+.big{font-size:22px;margin:6px 0 4px}
+.muted{color:#444}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+table{width:100%;border-collapse:collapse;background:#ddd;font-variant-numeric:tabular-nums}
+th,td{padding:6px 10px;text-align:left;border-bottom:1px solid #c4c4c4}
+th{font-weight:bold}
+th.n,td.n{text-align:right;white-space:nowrap}
+.ok{color:#11701c;font-weight:bold}.bad{color:#b3121b;font-weight:bold}
+tr.game{cursor:pointer}tr.game:hover,tr.game:focus{background:#cfcfcf;outline:none}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<section id="home" class="view on">
+  <div class="topright"><button id="histBtn" type="button">History</button></div>
+  <div class="card">
+    <h1>Keane's Arithmetic Game</h1>
+
+    <div class="opt">
+      <label><input type="checkbox" id="c-add" checked> Addition</label>
+      <div class="sub rng">Range: (<input id="add-a1" value="2" inputmode="numeric"> to <input id="add-a2" value="100" inputmode="numeric">) + (<input id="add-b1" value="2" inputmode="numeric"> to <input id="add-b2" value="100" inputmode="numeric">)</div>
+    </div>
+
+    <div class="opt">
+      <label><input type="checkbox" id="c-sub" checked> Subtraction</label>
+      <div class="sub">Addition problems in reverse.</div>
+      <div class="sub rng">Range: (<input id="sub-a1" value="2" inputmode="numeric"> to <input id="sub-a2" value="100" inputmode="numeric">) + (<input id="sub-b1" value="2" inputmode="numeric"> to <input id="sub-b2" value="100" inputmode="numeric">)</div>
+    </div>
+
+    <div class="opt">
+      <label><input type="checkbox" id="c-mul" checked> Multiplication</label>
+      <div class="sub rng">Range: (<input id="mul-a1" value="2" inputmode="numeric"> to <input id="mul-a2" value="12" inputmode="numeric">) × (<input id="mul-b1" value="2" inputmode="numeric"> to <input id="mul-b2" value="100" inputmode="numeric">)</div>
+    </div>
+
+    <div class="opt">
+      <label><input type="checkbox" id="c-div" checked> Division</label>
+      <div class="sub">Multiplication problems in reverse.</div>
+      <div class="sub rng">Range: (<input id="div-a1" value="2" inputmode="numeric"> to <input id="div-a2" value="12" inputmode="numeric">) × (<input id="div-b1" value="2" inputmode="numeric"> to <input id="div-b2" value="100" inputmode="numeric">)</div>
+    </div>
+
+    <div class="opt">
+      <label><input type="checkbox" id="c-auto" checked> Automatic pass</label>
+      <div class="sub">Moves on as soon as the answer is right. Unchecked: Enter submits, +1 correct / −1 incorrect, and the game is saved to history.</div>
+    </div>
+
+    <div class="opt">Duration:
+      <select id="dur">
+        <option value="30">30 seconds</option>
+        <option value="60">60 seconds</option>
+        <option value="120" selected>120 seconds</option>
+        <option value="300">300 seconds</option>
+        <option value="600">600 seconds</option>
+      </select>
+    </div>
+
+    <div class="row-end"><button id="startBtn" type="button">Start</button></div>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="view">
+  <div class="bar"><span>Seconds left: <span id="secs">120</span></span><span>Score: <span id="score">0</span></span></div>
+  <div class="band"><span id="prob"></span><span>=</span><input id="ans" autocomplete="off" inputmode="numeric" aria-label="Answer"></div>
+</section>
+
+<!-- END -->
+<section id="end" class="view">
+  <div class="wrap">
+    <h2>Time's up</h2>
+    <p class="big" id="endScore"></p>
+    <p class="muted" id="endCounts"></p>
+    <p class="muted" id="endSave"></p>
+    <div class="btns"><button id="againBtn" type="button">New game</button><button id="homeBtn1" type="button">Return to home</button></div>
+    <div id="endReview"></div>
+  </div>
+</section>
+
+<!-- HISTORY -->
+<section id="history" class="view">
+  <div class="wrap">
+    <h2>History</h2>
+    <div class="btns"><button id="homeBtn2" type="button">Return to home</button></div>
+    <div id="histList"></div>
+  </div>
+</section>
+
+<!-- HISTORY DETAIL -->
+<section id="detail" class="view">
+  <div class="wrap">
+    <h2 id="detTitle">Game</h2>
+    <p class="big" id="detScore"></p>
+    <p class="muted" id="detCounts"></p>
+    <div class="btns"><button id="backHist" type="button">Back to history</button><button id="homeBtn3" type="button">Return to home</button></div>
+    <div id="detReview"></div>
+  </div>
+</section>
+
+<script>
+{
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const show = id => { for (const v of document.querySelectorAll('.view')) v.classList.toggle('on', v.id === id); };
+const rint = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+
+// ---------- storage: this browser's localStorage ----------
+const LS_KEY = 'kag-history';
+function lsRead() { try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch (e) { return []; } }
+function lsWrite(arr) { try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); return true; } catch (e) { return false; } }
+async function saveGame(g) { const arr = lsRead(); arr.push(g); return lsWrite(arr); }
+async function loadGames() { return lsRead().sort((a, b) => b.ts - a.ts); }
+
+// ---------- settings ----------
+function range(prefix, which) {
+  let lo = parseInt($(prefix + '-' + which + '1').value, 10), hi = parseInt($(prefix + '-' + which + '2').value, 10);
+  if (!Number.isFinite(lo)) lo = 2; if (!Number.isFinite(hi)) hi = lo;
+  return lo <= hi ? [lo, hi] : [hi, lo];
+}
+const OPS = ['add', 'sub', 'mul', 'div'];
+const enabledOps = () => OPS.filter(o => $('c-' + o).checked);
+function syncStart() { $('startBtn').disabled = enabledOps().length === 0; }
+for (const o of OPS) $('c-' + o).addEventListener('change', syncStart);
+
+function makeProblem(cfg) {
+  const op = cfg.ops[Math.floor(Math.random() * cfg.ops.length)];
+  const [a1, a2] = cfg.r[op].a, [b1, b2] = cfg.r[op].b;
+  const a = rint(a1, a2), b = rint(b1, b2);
+  if (op === 'add') return { q: a + ' + ' + b, ans: a + b };
+  if (op === 'sub') return { q: (a + b) + ' − ' + a, ans: b };
+  if (op === 'mul') return { q: a + ' × ' + b, ans: a * b };
+  if (a === 0) return makeProblem(cfg);
+  return { q: (a * b) + ' ÷ ' + a, ans: b };
+}
+
+// ---------- game ----------
+let G = null, tick = null;
+
+function start() {
+  const ops = enabledOps();
+  if (!ops.length) return;
+  const r = {};
+  for (const o of OPS) r[o] = { a: range(o, 'a'), b: range(o, 'b') };
+  const dur = parseInt($('dur').value, 10);
+  G = { cfg: { ops, r }, auto: $('c-auto').checked, dur, score: 0, log: [], cur: null, endAt: performance.now() + dur * 1000 };
+  $('score').textContent = '0';
+  $('secs').textContent = String(dur);
+  next();
+  show('game');
+  $('ans').value = '';
+  $('ans').focus();
+  clearInterval(tick);
+  tick = setInterval(() => {
+    const left = Math.max(0, Math.ceil((G.endAt - performance.now()) / 1000));
+    $('secs').textContent = String(left);
+    if (left <= 0) finish();
+  }, 100);
+}
+
+function next() {
+  let p;
+  do { p = makeProblem(G.cfg); } while (G.cur && p.q === G.cur.q);
+  G.cur = p;
+  $('prob').textContent = p.q;
+  $('ans').value = '';
+}
+
+$('ans').addEventListener('input', () => {
+  if (!G || !G.auto) return;
+  const v = $('ans').value.trim();
+  if (v !== '' && Number(v) === G.cur.ans) {
+    G.score++; $('score').textContent = String(G.score); next();
+  }
+});
+
+$('ans').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !G || G.auto) return;
+  e.preventDefault();
+  const v = $('ans').value.trim();
+  if (v === '') return;
+  const ok = Number(v) === G.cur.ans;
+  G.log.push({ q: G.cur.q, a: G.cur.ans, g: v, ok });
+  G.score += ok ? 1 : -1;
+  $('score').textContent = String(G.score);
+  next();
+});
+
+function reviewTable(log) {
+  if (!log.length) return '<p class="muted">No questions answered.</p>';
+  return '<table><thead><tr><th>#</th><th>Question</th><th class="n">Your answer</th><th class="n">Correct</th><th></th></tr></thead><tbody>' +
+    log.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.q)}</td><td class="n">${esc(x.g)}</td><td class="n">${esc(x.a)}</td><td class="${x.ok ? 'ok' : 'bad'}">${x.ok ? '✓' : '✗'}</td></tr>`).join('') +
+    '</tbody></table>';
+}
+function counts(log) {
+  const c = log.filter(x => x.ok).length;
+  return `Correct: ${c} · Incorrect: ${log.length - c}`;
+}
+
+async function finish() {
+  clearInterval(tick); tick = null;
+  if (!G) return;
+  const g = G; G = null;
+  $('ans').blur();
+  if (g.auto) {
+    $('endScore').textContent = 'Score: ' + g.score;
+    $('endCounts').textContent = '';
+    $('endSave').textContent = '';
+    $('endReview').innerHTML = '';
+    show('end');
+    return;
+  }
+  const max = g.log.length;
+  $('endScore').textContent = `Score: ${g.score} / ${max}`;
+  $('endCounts').textContent = counts(g.log);
+  $('endSave').textContent = 'Saving to history…';
+  $('endReview').innerHTML = reviewTable(g.log);
+  show('end');
+  const rec = { id: 'g' + Date.now() + Math.random().toString(36).slice(2, 6), ts: Date.now(), dur: g.dur, ops: g.cfg.ops, score: g.score, max, log: g.log };
+  const ok = await saveGame(rec);
+  $('endSave').textContent = ok ? 'Saved to history.' : 'Could not save this game to history.';
+}
+
+// ---------- history ----------
+let games = [];
+const OPNAME = { add: '+', sub: '−', mul: '×', div: '÷' };
+const fmtDate = ts => new Date(ts).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+async function openHistory() {
+  show('history');
+  $('histList').innerHTML = '<p class="muted">Loading…</p>';
+  games = await loadGames();
+  if (!games.length) { $('histList').innerHTML = '<p class="muted">No games yet. Games played with Automatic pass unchecked appear here.</p>'; return; }
+  $('histList').innerHTML = '<table><thead><tr><th>Date</th><th>Operations</th><th class="n">Duration</th><th class="n">Score</th></tr></thead><tbody>' +
+    games.map((g, i) => `<tr class="game" tabindex="0" data-i="${i}"><td>${esc(fmtDate(g.ts))}</td><td>${esc((g.ops || []).map(o => OPNAME[o] || '').join(' '))}</td><td class="n">${esc(g.dur)} s</td><td class="n">${esc(g.score)} / ${esc(g.max)}</td></tr>`).join('') +
+    '</tbody></table>';
+}
+function openDetail(i) {
+  const g = games[i]; if (!g) return;
+  const log = Array.isArray(g.log) ? g.log : [];
+  $('detTitle').textContent = fmtDate(g.ts);
+  $('detScore').textContent = `Score: ${g.score} / ${g.max}`;
+  $('detCounts').textContent = counts(log) + ` · ${g.dur} seconds`;
+  $('detReview').innerHTML = reviewTable(log);
+  show('detail');
+}
+$('histList').addEventListener('click', e => { const tr = e.target.closest('tr.game'); if (tr) openDetail(+tr.dataset.i); });
+$('histList').addEventListener('keydown', e => { if (e.key === 'Enter') { const tr = e.target.closest('tr.game'); if (tr) openDetail(+tr.dataset.i); } });
+
+// ---------- buttons ----------
+$('startBtn').addEventListener('click', start);
+$('againBtn').addEventListener('click', start);
+$('histBtn').addEventListener('click', openHistory);
+$('backHist').addEventListener('click', () => show('history'));
+for (const id of ['homeBtn1', 'homeBtn2', 'homeBtn3']) $(id).addEventListener('click', () => show('home'));
+syncStart();
+}
+</script>
+</body>
+</html>
